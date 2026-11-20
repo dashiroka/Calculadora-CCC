@@ -1,57 +1,3 @@
-"""Aplicación web del ejercicio 8.4 — Cosmic Computer Company."""
-import io
-import json
-
-import numpy as np
-import pandas as pd
-import streamlit as st
-
-from solver_ccc import DATOS_ORIGINALES, resolver, moneda
-
-st.set_page_config(page_title="Calculadora CCC | Optimización", page_icon="🏭", layout="wide", initial_sidebar_state="expanded")
-st.markdown("""
-<style>
-    .block-container {padding-top: 2rem; max-width: 1280px;}
-    .main-title {font-size:2.5rem; font-weight:800; margin-bottom:.1rem; color:#172b4d}
-    .eyebrow {font-size:.85rem; letter-spacing:.17em; font-weight:700; color:#2c6b88}
-    .subhead {color:#55677d; font-size:1.05rem; margin-bottom:1.8rem}
-    div[data-testid="stMetric"] {background:#f4f7fb; border:1px solid #dae4ee; border-radius:12px; padding:14px 16px;}
-    div[data-testid="stMetricLabel"] {color:#41556a;}
-    .note {background:#eef5fa; border-left:4px solid #2b83a4; padding:12px 14px; border-radius:5px; margin:12px 0}
-</style>
-""", unsafe_allow_html=True)
-
-
-def originales():
-    return json.loads(json.dumps(DATOS_ORIGINALES, ensure_ascii=False))
-
-
-def reiniciar():
-    st.session_state.datos_ccc = originales()
-    st.session_state.revision = st.session_state.get("revision", 0) + 1
-    st.session_state.resultado_ccc = None
-
-
-if "datos_ccc" not in st.session_state:
-    reiniciar()
-
-st.markdown('<div class="eyebrow">INVESTIGACIÓN DE OPERACIONES · EJEMPLO 8.4</div>', unsafe_allow_html=True)
-st.markdown('<div class="main-title">Cosmic Computer Company</div>', unsafe_allow_html=True)
-st.markdown('<div class="subhead">Calculadora de ubicación de plantas y distribución de computadoras · Programación entera mixta</div>', unsafe_allow_html=True)
-
-with st.sidebar:
-    st.header("⚙️ Panel de control")
-    st.write("Modifica los datos, pulsa **Resolver** y descubre qué plantas conviene abrir y cuántas computadoras enviar.")
-    if st.button("↺ Restablecer valores del libro", use_container_width=True):
-        reiniciar()
-        st.rerun()
-    st.divider()
-    st.markdown("**Modelo matemático**")
-    st.latex(r"\min Z=\sum_i F_i y_i+\sum_i\sum_j c_{ij}x_{ij}")
-    st.latex(r"\sum_j x_{ij}\leq C_i y_i")
-    st.latex(r"\sum_i x_{ij}=D_j")
-    st.caption("Las cantidades enviadas son enteras y las decisiones de apertura son binarias.")
-    st.divider()
     st.caption("Basado en el ejemplo del libro de Mathur y Solow (1996). Sin necesidad de instalar Python para los visitantes una vez publicado.")
 
 state = st.session_state.datos_ccc
@@ -59,7 +5,7 @@ revision = st.session_state.revision
 p = state["plantas"]
 t = state["tiendas"]
 
-st.subheader("01  ·  Editar los datos")
+st.subheader("Editar los datos")
 a, b = st.columns(2, gap="large")
 with a:
     st.markdown("**Plantas de producción**")
@@ -82,7 +28,7 @@ with b:
         column_config={"Demanda":st.column_config.NumberColumn("Demanda",min_value=0,step=1,format="%d")},
     )
 
-st.markdown("**Costos de transporte por computadora (planta → tienda)**")
+st.markdown("**Costos de transporte por computadora)**")
 transport_df = pd.DataFrame(state["transportes"], index=p, columns=t)
 transport_df.index.name = "Planta"
 edit_transport = st.data_editor(
@@ -122,7 +68,7 @@ if stored is None:
 else:
     resolved_data, result = stored
     st.divider()
-    st.subheader("02  ·  Resultado óptimo")
+    st.subheader("Resultado óptimo")
     if "error" in result:
         st.error(result["error"])
         st.write("El sistema no inventa una respuesta: revisa la capacidad disponible y la demanda o los datos numéricos.")
@@ -131,7 +77,7 @@ else:
         f1.metric("Costo mínimo total", moneda(result["total"]))
         f2.metric("Costos fijos", moneda(result["fijos"]))
         f3.metric("Costos de transporte", moneda(result["transporte"]))
-        st.success("✅ Se encontró una solución óptima que satisface todas las restricciones.")
+        st.success("Se encontró una solución óptima que satisface todas las restricciones.")
 
         st.markdown("**¿Qué plantas deben abrirse?**")
         estado = pd.DataFrame({
@@ -171,5 +117,3 @@ else:
         buf=io.StringIO()
         tabla.to_csv(buf, index=True)
         st.download_button("⬇ Descargar tabla de distribución (CSV)",buf.getvalue().encode("utf-8-sig"),"distribucion_CCC.csv","text/csv",use_container_width=True)
-
-st.caption("Fuente: Mathur, K. y Solow, D. (1996). Investigación de operaciones: El arte de la toma de decisiones. Ejemplo 8.4. Los cálculos se realizan con el optimizador MILP de SciPy.")
